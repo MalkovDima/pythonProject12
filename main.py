@@ -9,9 +9,10 @@ import time
 class FotoVk:
     url = 'https://api.vk.com/method/'
 
-    def __init__(self, token, vers):
+    def __init__(self, token, vers, id):
         self.params = {
             'access_token': token,
+            'owner_id': id,
             'v': vers
         }
 
@@ -19,7 +20,6 @@ class FotoVk:
     def get_foto(self, number=5):
         url_photo_get = self.url + 'photos.get'
         params_photo_get = {
-            'owner_id': '263903',
             'album_id': 'profile',
             'extended': '1',
             'photo_sizes': '1',
@@ -28,19 +28,24 @@ class FotoVk:
         new_dict = {}
         new_list = []
         res = requests.get(url_photo_get, params={**self.params, **params_photo_get}).json()
-        for n in res['response']['items']:
-            new_dict_for_json = {}
-            if not n['likes']['count'] in new_dict:
-                new_dict[n['likes']['count']] = n['sizes'][len(n['sizes']) - 1]['url']
-                new_dict_for_json['file_name'] = str(n['likes']['count'])
-                new_dict_for_json['size'] = str(n['sizes'][len(n['sizes']) - 1]['type'])
-            else:
-                new_dict[str(n['likes']['count']) + '-' + str(n['date'])] = n['sizes'][len(n['sizes']) - 1]['url']
-                new_dict_for_json['file_name'] = str(n['likes']['count']) + '-' + str(n['date'])
-                new_dict_for_json['size'] = str(n['sizes'][len(n['sizes']) - 1]['type'])
-            new_list.append(new_dict_for_json)
-        ret = [new_dict, new_list]
-        pprint(f'выбрано {number} фотографий для резервного копирования!')
+        if 'error' in res:
+            pprint(res['error']['error_msg'])
+            ret = 0
+        else:
+
+            for n in res['response']['items']:
+                new_dict_for_json = {}
+                if not n['likes']['count'] in new_dict:
+                    new_dict[n['likes']['count']] = n['sizes'][len(n['sizes']) - 1]['url']
+                    new_dict_for_json['file_name'] = str(n['likes']['count'])
+                    new_dict_for_json['size'] = str(n['sizes'][len(n['sizes']) - 1]['type'])
+                else:
+                    new_dict[str(n['likes']['count']) + '-' + str(n['date'])] = n['sizes'][len(n['sizes']) - 1]['url']
+                    new_dict_for_json['file_name'] = str(n['likes']['count']) + '-' + str(n['date'])
+                    new_dict_for_json['size'] = str(n['sizes'][len(n['sizes']) - 1]['type'])
+                new_list.append(new_dict_for_json)
+            ret = [new_dict, new_list]
+            pprint(f'подготовка фотографий для резервного копирования!')
         return ret
 
 
@@ -92,13 +97,16 @@ if __name__ == '__main__':
     with open("Token.txt", 'r') as f:
         you_token_vk = f.read()
     version = '5.131'
-    pf = FotoVk(you_token_vk, version)
-    n = input('введите количестово копируемых фото: ')
-    list_foto = pf.get_foto(n)
-    sec = time.time()
-    struct = time.localtime(sec)
-    name_folder = str(time.strftime('%d.%m.%Y %H-%M-%S', struct))
-    with open("json_foto.json", 'w') as f:
-        json.dump(list_foto[1], f, indent=2)
-    uploader = YaUploader(you_token_ya)
-    uploader.save_dict_foto(list_foto[0], name_folder)
+    id_vk = input('Введите id в VK, чьи фото будем копировать: ')
+    pf = FotoVk(you_token_vk, version, id_vk)
+    list_foto = pf.get_foto()
+    if list_foto != 0:
+        sec = time.time()
+        struct = time.localtime(sec)
+        name_folder = str(time.strftime('%d.%m.%Y %H-%M-%S', struct))
+        with open("json_foto.json", 'w') as f:
+            json.dump(list_foto[1], f, indent=2)
+        uploader = YaUploader(you_token_ya)
+        uploader.save_dict_foto(list_foto[0], name_folder)
+    else:
+        pprint('читайте ошибку строкой выше')

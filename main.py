@@ -2,6 +2,8 @@ import requests
 from pprint import pprint
 from datetime import date
 import json
+from tqdm import tqdm
+import time
 
 
 class FotoVk:
@@ -58,7 +60,7 @@ class YaUploader:
         headers = self.get_headers()
         params = {"path": folder_path}
         requests.put(new_foldee_url, headers=headers, params=params)
-        pprint(f'Папка: {folder_path}, для записи фото на Яндекс диск создана!!!')
+        pprint(f'ПАПКА: {folder_path}, ДЛЯ ЗАПИСИ ФОТО НА ЯНДЕКС ДИСК СОЗДАНА!!!')
 
     # Сохр 1 фото в папку
     def save_foto(self, name_foto: str, url_foto: str, folder: str):
@@ -71,13 +73,18 @@ class YaUploader:
 
     # Сохр всех фото в папку
     def save_dict_foto(self, dict_foto: dict, name_folder: str):
-        n = 0
+        n = 1
         self.new_folder(name_folder)
         for foto_name, foto_url in dict_foto.items():
+            pprint(f'На Яндекс диск в папку: {name_folder} копируется: {n} фото')
             n += 1
             self.save_foto(foto_name, foto_url, name_folder)
-            pprint(f'На Яндекс диск в папку: {name_folder} скопорировано: {n} фото')
-        pprint('Запись завершена!')
+            pbar = tqdm(total=100)
+            for i in range(10):
+                time.sleep(0.1)
+                pbar.update(10)
+            pbar.close()
+        pprint('ЗАПИСЬ ЗАВЕРШЕНА!')
 
 
 if __name__ == '__main__':
@@ -86,8 +93,10 @@ if __name__ == '__main__':
                    '-fgrrDWtyp3avyL '
     version = '5.131'
     pf = FotoVk(you_token_vk, version)
-    list_foto = pf.get_foto(4)
-    name_folder = str(date.today())
+    list_foto = pf.get_foto(8)
+    sec = time.time()
+    struct = time.localtime(sec)
+    name_folder = str(time.strftime('%d.%m.%Y %H-%M-%S', struct))
     with open("json_foto.json", 'w') as fout:
                  json.dump(list_foto[1], fout, indent=2)
     you_token_ya = 'AQAAAABiV6hBAADLW0MczaVdtUkUvEAkcVVYNj8'

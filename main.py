@@ -1,6 +1,6 @@
 import requests
 from pprint import pprint
-from datetime import date
+# from datetime import date
 import json
 from tqdm import tqdm
 import time
@@ -55,12 +55,12 @@ class YaUploader:
         }
 
     # Создание папки на яндекс диске
-    def new_folder(self, folder_path):
+    def new_folder(self, path_folder):
         new_foldee_url = 'https://cloud-api.yandex.net/v1/disk/resources'
         headers = self.get_headers()
-        params = {"path": folder_path}
+        params = {"path": name_folder}
         requests.put(new_foldee_url, headers=headers, params=params)
-        pprint(f'ПАПКА: {folder_path}, ДЛЯ ЗАПИСИ ФОТО НА ЯНДЕКС ДИСК СОЗДАНА!!!')
+        pprint(f'ПАПКА: {path_folder},СОЗДАНА ДЛЯ ЗАПИСИ ФОТО НА ЯНДЕКС ДИСК СОЗДАНА!!!')
 
     # Сохр 1 фото в папку
     def save_foto(self, name_foto: str, url_foto: str, folder: str):
@@ -88,17 +88,17 @@ class YaUploader:
 
 
 if __name__ == '__main__':
-    you_token_vk = 'vk1.a.VP07pMoVEp8JfVIGqYHFCtHHFvhJVmRERRdrFnyzvtVkH-N2oDBA_L1XtYlQ65jrAR9_OCJZFgZ-SO3kiK' \
-                   '-OUfrSgAfc5ioMTR7ujzV9503bWwOqbPqEJVEdUljlCAv7dGmei5wXGhzzhIaYOtzij2t2irvAC2KHvAY0KfYfMTCuVd-z_' \
-                   '-fgrrDWtyp3avyL '
+    you_token_ya = input('Введите токен от Яндекс диска: ')
+    with open("Token.txt", 'r') as f:
+        you_token_vk = f.read()
     version = '5.131'
     pf = FotoVk(you_token_vk, version)
-    list_foto = pf.get_foto(8)
+    n = input('введите количестово копируемых фото: ')
+    list_foto = pf.get_foto(n)
     sec = time.time()
     struct = time.localtime(sec)
     name_folder = str(time.strftime('%d.%m.%Y %H-%M-%S', struct))
-    with open("json_foto.json", 'w') as fout:
-                 json.dump(list_foto[1], fout, indent=2)
-    you_token_ya = 'AQAAAABiV6hBAADLW0MczaVdtUkUvEAkcVVYNj8'
+    with open("json_foto.json", 'w') as f:
+        json.dump(list_foto[1], f, indent=2)
     uploader = YaUploader(you_token_ya)
     uploader.save_dict_foto(list_foto[0], name_folder)
